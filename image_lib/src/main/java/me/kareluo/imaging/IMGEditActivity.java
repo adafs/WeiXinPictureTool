@@ -6,20 +6,23 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
+
 import me.kareluo.imaging.core.IMGMode;
 import me.kareluo.imaging.core.IMGText;
 import me.kareluo.imaging.core.file.IMGAssetFileDecoder;
 import me.kareluo.imaging.core.file.IMGDecoder;
 import me.kareluo.imaging.core.file.IMGFileDecoder;
 import me.kareluo.imaging.core.util.IMGUtils;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import me.kareluo.imaging.core.util.TUIUtils;
 
 /**
  * Created by felix on 2017/11/14 下午2:26.
+ * modifid by zhaixs on 2020/11/12
  */
 
 public class IMGEditActivity extends IMGEditBaseActivity {
@@ -38,10 +41,22 @@ public class IMGEditActivity extends IMGEditBaseActivity {
     }
 
     @Override
+    protected void onStart() {
+        TUIUtils.setFullScreen(this);
+        super.onStart();
+    }
+
+    @Override
     public Bitmap getBitmap() {
         Intent intent = getIntent();
         if (intent == null) {
             return null;
+        }
+        ImageHolder imageHolder = ImageHolder.getInstance();
+        Bitmap bitmap = imageHolder.getBitmap();
+        imageHolder.setBitmap(null);
+        if (bitmap != null){
+            return bitmap;
         }
 
         Uri uri = intent.getParcelableExtra(EXTRA_IMAGE_URI);
@@ -52,8 +67,9 @@ public class IMGEditActivity extends IMGEditBaseActivity {
         IMGDecoder decoder = null;
 
         String path = uri.getPath();
-        if (!TextUtils.isEmpty(path)) {
-            switch (uri.getScheme()) {
+        String scheme = uri.getScheme();
+        if (!TextUtils.isEmpty(path) && scheme != null) {
+            switch (scheme) {
                 case "asset":
                     decoder = new IMGAssetFileDecoder(this, uri);
                     break;
@@ -84,10 +100,7 @@ public class IMGEditActivity extends IMGEditBaseActivity {
 
         options.inJustDecodeBounds = false;
 
-        Bitmap bitmap = decoder.decode(options);
-        if (bitmap == null) {
-            return null;
-        }
+        bitmap = decoder.decode(options);
 
         return bitmap;
     }
@@ -130,34 +143,33 @@ public class IMGEditActivity extends IMGEditBaseActivity {
     public void onDoneClick() {
         String path = getIntent().getStringExtra(EXTRA_IMAGE_SAVE_PATH);
         if (!TextUtils.isEmpty(path)) {
-            File file = new File(path);
-            try {
-                if (file.exists() || (!file.exists() && file.createNewFile())){
-                    Bitmap bitmap = mImgView.saveBitmap();
-                    if (bitmap != null) {
-                        FileOutputStream fout = null;
-                        try {
-                            fout = new FileOutputStream(path);
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fout);
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        } finally {
-                            if (fout != null) {
-                                try {
-                                    fout.close();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            Bitmap bitmap = mImgView.saveBitmap();
+            Intent data = new Intent();
+            //获取到拍照成功后返回的Bitmap
+            saveBitmap(bitmap, path);
+            data.putExtra("take_photo", true);
+            data.putExtra("path", path);
+            setResult(RESULT_OK, data);
+            finish();
         }
-        setResult(RESULT_OK);
-        finish();
+    }
+
+    public String saveBitmap(Bitmap bm, String fileAbsolutePath) {
+        File f = new File(fileAbsolutePath);
+        if (f.exists()) {
+            f.delete();
+        }
+        try {
+            FileOutputStream out = new FileOutputStream(f);
+            bm.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.flush();
+            out.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return fileAbsolutePath;
     }
 
     @Override
@@ -185,5 +197,39 @@ public class IMGEditActivity extends IMGEditBaseActivity {
     @Override
     public void onColorChanged(int checkedColor) {
         mImgView.setPenColor(checkedColor);
+    }
+
+    /**
+     * 编辑图片需要的bitmap保管类
+     */
+    public static class ImageHolder {
+        private static ImageHolder instance;
+        private Bitmap bitmap;
+        private final static ReentrantLock lock = new ReentrantLock();
+
+        private ImageHolder(){
+        }
+
+        public static ImageHolder getInstance() {
+            if (instance == null) {
+                lock.lock();
+                try {
+                    if (instance == null){
+                        instance = new ImageHolder();
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            }
+            return instance;
+        }
+
+        public Bitmap getBitmap() {
+            return bitmap;
+        }
+
+        public void setBitmap(Bitmap bitmap) {
+            this.bitmap = bitmap;
+        }
     }
 }

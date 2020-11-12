@@ -1,12 +1,13 @@
 package me.kareluo.imaging;
 
-import android.app.Activity;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.RadioGroup;
 import android.widget.ViewSwitcher;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import me.kareluo.imaging.core.IMGMode;
 import me.kareluo.imaging.core.IMGText;
@@ -17,7 +18,7 @@ import me.kareluo.imaging.view.IMGView;
  * Created by felix on 2017/12/5 下午3:08.
  */
 
-abstract class IMGEditBaseActivity extends Activity implements View.OnClickListener,
+abstract class IMGEditBaseActivity extends AppCompatActivity implements View.OnClickListener,
         IMGTextEditDialog.Callback, RadioGroup.OnCheckedChangeListener,
         DialogInterface.OnShowListener, DialogInterface.OnDismissListener {
 

@@ -9,12 +9,14 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,6 +24,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
 
 import me.kareluo.imaging.IMGEditActivity;
+import me.kareluo.imaging.core.file.IMGAssetFileDecoder;
+import me.kareluo.imaging.core.file.IMGDecoder;
+import me.kareluo.imaging.core.file.IMGFileDecoder;
+import me.kareluo.imaging.core.util.IMGUtils;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQ_SELECT_PHOTO = 0xf0a;
@@ -71,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
                         String uri_path = getFilePathByUri(this, data.getData());
                         System.out.println("============ uri_path " + uri_path);
                         Uri uri = Uri.fromFile(new File(uri_path));
-
+                        IMGEditActivity.ImageHolder.getInstance().setBitmap(getBitmap(uri));
                         intent.putExtra(IMGEditActivity.EXTRA_IMAGE_URI, uri);
                         int dirEnd = uri_path.lastIndexOf("/") + 1;
                         System.out.println("============ dirEnd " + dirEnd);
@@ -97,6 +103,63 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private static final int MAX_WIDTH = 1024;
+
+    private static final int MAX_HEIGHT = 1024;
+
+    private Bitmap getBitmap(Uri uri) {
+        Intent intent = getIntent();
+        if (intent == null) {
+            return null;
+        }
+        if (uri == null) {
+            return null;
+        }
+
+        IMGDecoder decoder = null;
+        Bitmap bitmap;
+
+        String path = uri.getPath();
+        if (!TextUtils.isEmpty(path)) {
+            switch (uri.getScheme()) {
+                case "asset":
+                    decoder = new IMGAssetFileDecoder(this, uri);
+                    break;
+                case "file":
+                    decoder = new IMGFileDecoder(uri);
+                    break;
+            }
+        }
+
+        if (decoder == null) {
+            return null;
+        }
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 1;
+        options.inJustDecodeBounds = true;
+
+        decoder.decode(options);
+
+        if (options.outWidth > MAX_WIDTH) {
+            options.inSampleSize = IMGUtils.inSampleSize(Math.round(1f * options.outWidth / MAX_WIDTH));
+        }
+
+        if (options.outHeight > MAX_HEIGHT) {
+            options.inSampleSize = Math.max(options.inSampleSize,
+                    IMGUtils.inSampleSize(Math.round(1f * options.outHeight / MAX_HEIGHT)));
+        }
+
+        options.inJustDecodeBounds = false;
+
+        bitmap = decoder.decode(options);
+        if (bitmap == null) {
+            return null;
+        }
+
+        return bitmap;
     }
 
     @TargetApi(19)
