@@ -3,7 +3,6 @@ package me.kareluo.imaging.gallery;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
-import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +11,8 @@ import android.view.WindowManager;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 

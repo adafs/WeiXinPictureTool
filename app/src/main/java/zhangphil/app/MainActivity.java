@@ -1,20 +1,23 @@
 package zhangphil.app;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
 
@@ -35,6 +38,11 @@ public class MainActivity extends AppCompatActivity {
                 seleteImg();
             }
         });
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && this.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+        {
+            this.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        }
     }
 
     private void seleteImg() {
@@ -61,11 +69,21 @@ public class MainActivity extends AppCompatActivity {
 
                     try {
                         String uri_path = getFilePathByUri(this, data.getData());
+                        System.out.println("============ uri_path " + uri_path);
                         Uri uri = Uri.fromFile(new File(uri_path));
-                        System.out.println(uri.toString());
 
                         intent.putExtra(IMGEditActivity.EXTRA_IMAGE_URI, uri);
-                        //intent.putExtra(IMGEditActivity.EXTRA_IMAGE_SAVE_PATH,);
+                        int dirEnd = uri_path.lastIndexOf("/") + 1;
+                        System.out.println("============ dirEnd " + dirEnd);
+                        int nameEnd = uri_path.lastIndexOf(".");
+                        System.out.println("============ nameEnd " + nameEnd);
+                        String fileName = uri_path.substring(0, dirEnd);
+                        System.out.println("============ fileName " + fileName);
+                        String left = uri_path.substring(nameEnd);
+                        System.out.println("============ nameEnd " + nameEnd);
+                        String newPath = fileName + System.currentTimeMillis() + left;
+                        System.out.println("============ newPath " + newPath);
+                        intent.putExtra(IMGEditActivity.EXTRA_IMAGE_SAVE_PATH, newPath);
                         startActivity(intent);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -78,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
             default:
                 break;
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @TargetApi(19)

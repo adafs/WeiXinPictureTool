@@ -13,6 +13,7 @@ import me.kareluo.imaging.core.file.IMGDecoder;
 import me.kareluo.imaging.core.file.IMGFileDecoder;
 import me.kareluo.imaging.core.util.IMGUtils;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -129,29 +130,33 @@ public class IMGEditActivity extends IMGEditBaseActivity {
     public void onDoneClick() {
         String path = getIntent().getStringExtra(EXTRA_IMAGE_SAVE_PATH);
         if (!TextUtils.isEmpty(path)) {
-            Bitmap bitmap = mImgView.saveBitmap();
-            if (bitmap != null) {
-                FileOutputStream fout = null;
-                try {
-                    fout = new FileOutputStream(path);
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fout);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } finally {
-                    if (fout != null) {
+            File file = new File(path);
+            try {
+                if (file.exists() || (!file.exists() && file.createNewFile())){
+                    Bitmap bitmap = mImgView.saveBitmap();
+                    if (bitmap != null) {
+                        FileOutputStream fout = null;
                         try {
-                            fout.close();
-                        } catch (IOException e) {
+                            fout = new FileOutputStream(path);
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fout);
+                        } catch (FileNotFoundException e) {
                             e.printStackTrace();
+                        } finally {
+                            if (fout != null) {
+                                try {
+                                    fout.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         }
                     }
                 }
-                setResult(RESULT_OK);
-                finish();
-                return;
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        setResult(RESULT_CANCELED);
+        setResult(RESULT_OK);
         finish();
     }
 
