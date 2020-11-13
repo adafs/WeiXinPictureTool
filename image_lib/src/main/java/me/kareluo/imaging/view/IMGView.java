@@ -228,7 +228,8 @@ public class IMGView extends FrameLayout implements Runnable, ScaleGestureDetect
         mImage.onDrawDoodles(canvas);
         if (mImage.getMode() == IMGMode.DOODLE && !mPen.isEmpty()) {
             mDoodlePaint.setColor(mPen.getColor());
-            mDoodlePaint.setStrokeWidth(IMGPath.BASE_DOODLE_WIDTH * mImage.getScale());
+            // 这里设置画笔显示的路径宽度
+            mDoodlePaint.setStrokeWidth(mPen.getWidth() * mImage.getScale());
             canvas.save();
             RectF frame = mImage.getClipFrame();
             canvas.rotate(-mImage.getRotate(), frame.centerX(), frame.centerY());
@@ -419,6 +420,7 @@ public class IMGView extends FrameLayout implements Runnable, ScaleGestureDetect
     private boolean onPathBegin(MotionEvent event) {
         mPen.reset(event.getX(), event.getY());
         mPen.setIdentity(event.getPointerId(0));
+        mPen.setWidth(IMGPath.BASE_DOODLE_WIDTH / mImage.getScale());
         return true;
     }
 

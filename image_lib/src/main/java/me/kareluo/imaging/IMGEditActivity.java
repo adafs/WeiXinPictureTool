@@ -1,5 +1,6 @@
 package me.kareluo.imaging;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -42,8 +43,40 @@ public class IMGEditActivity extends IMGEditBaseActivity {
 
     @Override
     protected void onStart() {
-        TUIUtils.setFullScreen(this);
+        TUIUtils.setFullScreen(this.getWindow());
         super.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+    }
+
+    @Override
+    public void onShow(DialogInterface dialog) {
+        super.onShow(dialog);
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        //TODO 双击文字时不会触发这个，需要传递回调
+        TUIUtils.setFullScreen(this.getWindow());
+        super.onDismiss(dialog);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
     @Override
@@ -144,6 +177,7 @@ public class IMGEditActivity extends IMGEditBaseActivity {
         String path = getIntent().getStringExtra(EXTRA_IMAGE_SAVE_PATH);
         if (!TextUtils.isEmpty(path)) {
             Bitmap bitmap = mImgView.saveBitmap();
+            ImageHolder.getInstance().setBitmap(bitmap);
             Intent data = new Intent();
             //获取到拍照成功后返回的Bitmap
             saveBitmap(bitmap, path);

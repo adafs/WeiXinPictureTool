@@ -18,6 +18,7 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -31,12 +32,16 @@ import me.kareluo.imaging.core.util.IMGUtils;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQ_SELECT_PHOTO = 0xf0a;
-    private Bitmap avatarBitMap = null;
+    public static final int REQ_EDIT_PHOTO = 0xf1a;
+    private ImageView imagePre;
+    private ImageView imageAfter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        imagePre = findViewById(R.id.image_1);
+        imageAfter = findViewById(R.id.image_2);
 
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,26 +63,23 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, REQ_SELECT_PHOTO);
     }
 
+    private Bitmap bitmapPre;
+    private Bitmap bitmapAfter;
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQ_SELECT_PHOTO: {
                 // 选取照片。
                 if (resultCode == RESULT_OK && data != null) {
-                    try {
-                        avatarBitMap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
-                        //此处获得了Bitmap图片，可以用作设置头像等等。
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
                     Intent intent = new Intent(this, IMGEditActivity.class);
 
                     try {
                         String uri_path = getFilePathByUri(this, data.getData());
                         System.out.println("============ uri_path " + uri_path);
                         Uri uri = Uri.fromFile(new File(uri_path));
-                        IMGEditActivity.ImageHolder.getInstance().setBitmap(getBitmap(uri));
+                        bitmapPre = getBitmap(uri);
+                        IMGEditActivity.ImageHolder.getInstance().setBitmap(bitmapPre);
                         intent.putExtra(IMGEditActivity.EXTRA_IMAGE_URI, uri);
                         int dirEnd = uri_path.lastIndexOf("/") + 1;
                         System.out.println("============ dirEnd " + dirEnd);
@@ -90,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                         String newPath = fileName + System.currentTimeMillis() + left;
                         System.out.println("============ newPath " + newPath);
                         intent.putExtra(IMGEditActivity.EXTRA_IMAGE_SAVE_PATH, newPath);
-                        startActivity(intent);
+                        startActivityForResult(intent, REQ_EDIT_PHOTO);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -98,11 +100,36 @@ public class MainActivity extends AppCompatActivity {
 
                 break;
             }
-
+            case REQ_EDIT_PHOTO:
+                if(resultCode == RESULT_OK) {
+                    Bitmap bitmap = IMGEditActivity.ImageHolder.getInstance().getBitmap();
+                    if (bitmap != null && !bitmap.isRecycled()) {
+                        imageAfter.setImageBitmap(bitmap);
+                    }
+                }
+                break;
             default:
                 break;
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    protected void onResume() {
+        if (bitmapPre != null && !bitmapPre.isRecycled()){
+            imagePre.setImageBitmap(bitmapPre);
+        }
+        if (bitmapAfter != null && !bitmapAfter.isRecycled()){
+            imageAfter.setImageBitmap(bitmapAfter);
+        }
+        super.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        imagePre.setImageBitmap(null);
+        imageAfter.setImageBitmap(null);
+        super.onStop();
     }
 
     private static final int MAX_WIDTH = 1024;
@@ -267,11 +294,4 @@ public class MainActivity extends AppCompatActivity {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is Google Photos.
-     */
-    public static boolean isGooglePhotosUri(Uri uri) {
-        return "com.google.android.apps.photos.content".equals(uri.getAuthority());
-    }
 }

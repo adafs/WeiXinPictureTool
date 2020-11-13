@@ -6,12 +6,7 @@
     <application>
 
         <activity
-            android:name=".IMGGalleryActivity"
-            android:theme="@style/ImageGalleryTheme" />
-
-        <activity
             android:name=".IMGEditActivity"
-            android:theme="@style/ImageEditTheme"
             android:windowSoftInputMode="stateAlwaysHidden" />
 
     </application>
