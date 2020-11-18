@@ -10,6 +10,12 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,6 +29,9 @@ import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import me.kareluo.imaging.IMGEditActivity;
 import me.kareluo.imaging.core.file.IMGAssetFileDecoder;
@@ -50,8 +59,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && this.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-        {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && this.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             this.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         }
     }
@@ -79,6 +87,9 @@ public class MainActivity extends AppCompatActivity {
                         System.out.println("============ uri_path " + uri_path);
                         Uri uri = Uri.fromFile(new File(uri_path));
                         bitmapPre = getBitmap(uri);
+                        if (bitmapPre != null) {
+                            bitmapPre = addTextWatermark(bitmapPre);
+                        }
                         IMGEditActivity.ImageHolder.getInstance().setBitmap(bitmapPre);
                         intent.putExtra(IMGEditActivity.EXTRA_IMAGE_URI, uri);
                         int dirEnd = uri_path.lastIndexOf("/") + 1;
@@ -101,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             }
             case REQ_EDIT_PHOTO:
-                if(resultCode == RESULT_OK) {
+                if (resultCode == RESULT_OK) {
                     Bitmap bitmap = IMGEditActivity.ImageHolder.getInstance().getBitmap();
                     if (bitmap != null && !bitmap.isRecycled()) {
                         imageAfter.setImageBitmap(bitmap);
@@ -114,12 +125,81 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    /**
+     * 给一张Bitmap添加水印文字。
+     *
+     * @param bitmap 源图片
+     * @return 已经添加水印后的Bitmap。
+     */
+    public static Bitmap addTextWatermark(Bitmap bitmap) {
+        if (isEmptyBitmap(bitmap))
+            return null;
+        Bitmap ret = bitmap.copy(bitmap.getConfig(), true);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        Canvas canvas = new Canvas(ret);
+
+        // 总宽度定为图片1/3，其他宽度都根据这个值计算, 位置定在左下
+        float targetWidth = ret.getWidth() / 3f;
+        float targetHeight = targetWidth / 4;
+
+        // 画边框
+        float borderWidth = targetWidth / 100;
+        if (borderWidth < 1) borderWidth = 1;
+        RectF borderRect = new RectF();
+        borderRect.left = 0;
+        borderRect.top = ret.getHeight() - targetHeight;
+        borderRect.right = borderRect.left + targetWidth;
+        borderRect.bottom = borderRect.top + targetHeight;
+        paint.setColor(Color.parseColor("#A7A8AC"));
+        paint.setStrokeWidth(borderWidth);
+        paint.setStyle(Paint.Style.STROKE);
+        canvas.drawRect(borderRect, paint);
+        // 画背景
+        paint.setColor(Color.parseColor("#B36B6F7E"));
+        paint.setStyle(Paint.Style.FILL);
+        RectF backgroundRect = new RectF();
+        backgroundRect.left = borderRect.left + borderWidth;
+        backgroundRect.top = borderRect.top + borderWidth;
+        backgroundRect.right = backgroundRect.left + (targetWidth - borderWidth);
+        backgroundRect.bottom = backgroundRect.top + (targetHeight - borderWidth);
+        canvas.drawRect(borderRect, paint);
+
+        // 画文字
+        String content = getFormatData();
+        float textSize = targetWidth * 0.75f / 8; // 按10个字符算
+        //https://blog.csdn.net/u010661782/article/details/52805939
+        paint.setTextSize(textSize);
+        paint.setColor(Color.WHITE);
+        paint.setTypeface(Typeface.create("PingFangSC", Typeface.NORMAL));
+        Rect bounds = new Rect();
+        paint.getTextBounds(content, 0, content.length(), bounds);
+        // 居中显示
+        float x = (borderRect.left + borderWidth) + (targetWidth - bounds.width()) / 2f;
+        float y = (borderRect.bottom - borderWidth) - (targetHeight - bounds.height()) / 2f;
+        canvas.drawText(content, x, y, paint);
+        if (!bitmap.isRecycled())
+            bitmap.recycle();
+        return ret;
+    }
+
+    private static String getFormatData() {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd hh:mm", Locale.getDefault());
+        return simpleDateFormat.format(new Date());
+    }
+
+    /**
+     * Bitmap对象是否为空。
+     */
+    public static boolean isEmptyBitmap(Bitmap src) {
+        return src == null || src.getWidth() == 0 || src.getHeight() == 0;
+    }
+
     @Override
     protected void onResume() {
-        if (bitmapPre != null && !bitmapPre.isRecycled()){
+        if (bitmapPre != null && !bitmapPre.isRecycled()) {
             imagePre.setImageBitmap(bitmapPre);
         }
-        if (bitmapAfter != null && !bitmapAfter.isRecycled()){
+        if (bitmapAfter != null && !bitmapAfter.isRecycled()) {
             imageAfter.setImageBitmap(bitmapAfter);
         }
         super.onResume();
@@ -182,9 +262,6 @@ public class MainActivity extends AppCompatActivity {
         options.inJustDecodeBounds = false;
 
         bitmap = decoder.decode(options);
-        if (bitmap == null) {
-            return null;
-        }
 
         return bitmap;
     }

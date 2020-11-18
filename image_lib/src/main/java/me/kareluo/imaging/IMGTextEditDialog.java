@@ -12,7 +12,6 @@ import android.widget.EditText;
 import android.widget.RadioGroup;
 
 import me.kareluo.imaging.core.IMGText;
-import me.kareluo.imaging.core.util.TUIUtils;
 import me.kareluo.imaging.view.IMGColorGroup;
 
 /**
@@ -102,11 +101,9 @@ public class IMGTextEditDialog extends Dialog implements View.OnClickListener,
     @Override
     public void show() {
         super.show();
-        TUIUtils.setFullScreen(getWindow());
     }
 
     public interface Callback {
-
         void onText(IMGText text);
     }
 }

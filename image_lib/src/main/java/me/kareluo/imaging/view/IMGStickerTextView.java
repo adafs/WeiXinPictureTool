@@ -1,6 +1,7 @@
 package me.kareluo.imaging.view;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -81,7 +82,14 @@ public class IMGStickerTextView extends IMGStickerView implements IMGTextEditDia
 
     private IMGTextEditDialog getDialog() {
         if (mDialog == null) {
-            mDialog = new IMGTextEditDialog(getContext(), this);
+            Context context = getContext();
+            mDialog = new IMGTextEditDialog(context, this);
+            if (context instanceof DialogInterface.OnShowListener) {
+                mDialog.setOnShowListener((DialogInterface.OnShowListener) context);
+            }
+            if (context instanceof DialogInterface.OnDismissListener) {
+                mDialog.setOnDismissListener((DialogInterface.OnDismissListener) context);
+            }
         }
         return mDialog;
     }

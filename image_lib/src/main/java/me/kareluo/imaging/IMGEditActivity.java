@@ -37,46 +37,15 @@ public class IMGEditActivity extends IMGEditBaseActivity {
     public static final String EXTRA_IMAGE_SAVE_PATH = "IMAGE_SAVE_PATH";
 
     @Override
-    public void onCreated() {
-
-    }
-
-    @Override
     protected void onStart() {
         TUIUtils.setFullScreen(this.getWindow());
         super.onStart();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-    }
-
-    @Override
-    public void onShow(DialogInterface dialog) {
-        super.onShow(dialog);
-    }
-
-    @Override
     public void onDismiss(DialogInterface dialog) {
-        //TODO 双击文字时不会触发这个，需要传递回调
         TUIUtils.setFullScreen(this.getWindow());
         super.onDismiss(dialog);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
     }
 
     @Override
