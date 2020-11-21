@@ -1,6 +1,5 @@
 package me.kareluo.imaging;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,7 +18,6 @@ import me.kareluo.imaging.core.file.IMGAssetFileDecoder;
 import me.kareluo.imaging.core.file.IMGDecoder;
 import me.kareluo.imaging.core.file.IMGFileDecoder;
 import me.kareluo.imaging.core.util.IMGUtils;
-import me.kareluo.imaging.core.util.TUIUtils;
 
 /**
  * Created by felix on 2017/11/14 下午2:26.
@@ -35,18 +33,6 @@ public class IMGEditActivity extends IMGEditBaseActivity {
     public static final String EXTRA_IMAGE_URI = "IMAGE_URI";
 
     public static final String EXTRA_IMAGE_SAVE_PATH = "IMAGE_SAVE_PATH";
-
-    @Override
-    protected void onStart() {
-        TUIUtils.setFullScreen(this.getWindow());
-        super.onStart();
-    }
-
-    @Override
-    public void onDismiss(DialogInterface dialog) {
-        TUIUtils.setFullScreen(this.getWindow());
-        super.onDismiss(dialog);
-    }
 
     @Override
     public Bitmap getBitmap() {

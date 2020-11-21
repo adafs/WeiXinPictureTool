@@ -7,10 +7,10 @@ import android.view.View;
 import android.widget.RadioGroup;
 import android.widget.ViewSwitcher;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import me.kareluo.TFullScreenActivity;
 import me.kareluo.imaging.core.IMGMode;
 import me.kareluo.imaging.core.IMGText;
+import me.kareluo.imaging.core.util.TUIUtils;
 import me.kareluo.imaging.view.IMGColorGroup;
 import me.kareluo.imaging.view.IMGView;
 
@@ -18,7 +18,7 @@ import me.kareluo.imaging.view.IMGView;
  * Created by felix on 2017/12/5 下午3:08.
  */
 
-abstract class IMGEditBaseActivity extends AppCompatActivity implements View.OnClickListener,
+abstract class IMGEditBaseActivity extends TFullScreenActivity implements View.OnClickListener,
         IMGTextEditDialog.Callback, RadioGroup.OnCheckedChangeListener,
         DialogInterface.OnShowListener, DialogInterface.OnDismissListener {
 
@@ -155,6 +155,7 @@ abstract class IMGEditBaseActivity extends AppCompatActivity implements View.OnC
 
     @Override
     public void onDismiss(DialogInterface dialog) {
+        TUIUtils.setFullScreen(this);
         mOpSwitcher.setVisibility(View.VISIBLE);
     }
 

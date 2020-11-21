@@ -26,7 +26,9 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -58,9 +60,56 @@ public class MainActivity extends AppCompatActivity {
                 seleteImg();
             }
         });
+        findViewById(R.id.button1).setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public void onClick(View v) {
+                requestTakePhotoPermission();
+            }
+        });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && this.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             this.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        }
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void requestTakePhotoPermission() {
+        
+        // : 2020/7/23 相机权限
+        int cameraPermissionCheck = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA);
+        int recordAudioPermissionCheck = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO);
+
+        if (cameraPermissionCheck == PackageManager.PERMISSION_GRANTED && recordAudioPermissionCheck == PackageManager.PERMISSION_GRANTED) {
+            //有权限
+            startActivityForResult(new Intent(this, TakePhotoActivity.class), 100);
+        } else {
+            //没权限
+            if (cameraPermissionCheck != PackageManager.PERMISSION_GRANTED) {
+                this.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA);
+            }
+            if (recordAudioPermissionCheck != PackageManager.PERMISSION_GRANTED) {
+                this.shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO);
+            }
+            this.requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO}, 0);
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+
+        // : 2020/7/23 相机权限
+        int cameraPermissionCheck = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA);
+        int recordAudioPermissionCheck = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO);
+        if (cameraPermissionCheck == PackageManager.PERMISSION_GRANTED && recordAudioPermissionCheck == PackageManager.PERMISSION_GRANTED) {
+            //有权限
+            startActivityForResult(new Intent(this, TakePhotoActivity.class), 100);
         }
     }
 
