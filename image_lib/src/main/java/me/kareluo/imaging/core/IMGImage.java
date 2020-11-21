@@ -11,15 +11,16 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.util.Log;
+import android.util.SparseArray;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import me.kareluo.imaging.core.clip.IMGClip;
 import me.kareluo.imaging.core.clip.IMGClipWindow;
 import me.kareluo.imaging.core.homing.IMGHoming;
 import me.kareluo.imaging.core.sticker.IMGSticker;
 import me.kareluo.imaging.core.util.IMGUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by felix on 2017/11/21 下午10:03.
@@ -50,6 +51,7 @@ public class IMGImage {
 
     private float mBackupClipRotate = 0;
 
+    // 旋转只有两种，水平和竖直，为了排除旋转时浮点计算误差累积导致的问题，旋转时只保存一次值
     private float mRotate = 0, mTargetRotate = 0;
 
     private boolean isRequestToBaseFitting = false;
@@ -121,7 +123,10 @@ public class IMGImage {
 
     private static final Bitmap DEFAULT_IMAGE;
 
-    private static final int COLOR_SHADE = 0xCC000000;
+    /**
+     * 选中区域外的阴影颜色
+     */
+    private static final int COLOR_SHADE = 0xe8000000;
 
     static {
         DEFAULT_IMAGE = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
@@ -672,21 +677,50 @@ public class IMGImage {
         return mRotate;
     }
 
-    public void setRotate(float rotate) {
-        mRotate = rotate;
-    }
-
     public float getScale() {
         return 1f * mFrame.width() / mImage.getWidth();
     }
 
-    public void setScale(float scale) {
-        setScale(scale, mClipFrame.centerX(), mClipFrame.centerY());
+    public void setRotateAndScale(float rotate, float scale) {
+        setRotateAndScale(rotate, scale, mClipFrame.centerX(), mClipFrame.centerY());
     }
 
-    public void setScale(float scale, float focusX, float focusY) {
+    private SparseArray<Float> rotateScales = new SparseArray<>();
+
+    public void setRotateAndScale(float rotate, float scale, float focusX, float focusY) {
+
+
+        if (isVertical(rotate)) {
+            System.out.println("=== setRotateAndScale 偶数 === " + rotate + " %90= " + rotate % 90 + " scale " + scale);
+        } else if (isHorizontal(rotate)) {
+            System.out.println("=== setRotateAndScale 奇数 === " + rotate + " %90= " + rotate % 90 + " scale " + scale);
+        } else {
+        }
+        mRotate = rotate;
         onScale(scale / getScale(), focusX, focusY);
     }
+
+    private boolean isVertical(float rotate) {
+        return isTargetValue(rotate, 1f);//90偶数倍
+    }
+
+    private boolean isHorizontal(float rotate) {
+        return isTargetValue(rotate, 0f);//90奇数倍
+    }
+
+    private boolean isTargetValue(float rotate, float judgeValue) {
+        rotate = Math.abs(rotate);
+        if (rotate % 90 == 0) {
+            // 是90的倍数
+            float times = rotate / 90;
+            // 判断是90的奇数倍还是偶数倍
+            System.out.println("=== setRotateAndScale  === times % 2 " + times % 2 + " judgeValue= " + judgeValue);
+            System.out.println("=== setRotateAndScale  === times % 2 == judgeValue " + (times % 2 == judgeValue));
+            return times % 2 == judgeValue;
+        }
+        return false;
+    }
+
 
     public void onScale(float factor, float focusX, float focusY) {
 

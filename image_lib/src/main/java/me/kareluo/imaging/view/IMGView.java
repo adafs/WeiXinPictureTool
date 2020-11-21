@@ -340,13 +340,7 @@ public class IMGView extends FrameLayout implements Runnable, ScaleGestureDetect
     }
 
     boolean onInterceptTouch(MotionEvent event) {
-        if (isHoming()) {
-            stopHoming();
-            return true;
-        } else if (mImage.getMode() == IMGMode.CLIP) {
-            return true;
-        }
-        return false;
+        return isHoming() || mImage.getMode() == IMGMode.CLIP;
     }
 
     @Override
@@ -504,8 +498,7 @@ public class IMGView extends FrameLayout implements Runnable, ScaleGestureDetect
 
 
     private void toApplyHoming(IMGHoming homing) {
-        mImage.setScale(homing.scale);
-        mImage.setRotate(homing.rotate);
+        mImage.setRotateAndScale(homing.rotate, homing.scale);
         if (!onScrollTo(Math.round(homing.x), Math.round(homing.y))) {
             invalidate();
         }
@@ -558,7 +551,8 @@ public class IMGView extends FrameLayout implements Runnable, ScaleGestureDetect
             Log.d(TAG, "onAnimationEnd");
         }
         if (mImage.onHomingEnd(getScrollX(), getScrollY(), mHomingAnimator.isRotate())) {
-            toApplyHoming(mImage.clip(getScrollX(), getScrollY()));
+            IMGHoming clip = mImage.clip(getScrollX(), getScrollY());
+            toApplyHoming(clip);
         }
     }
 
