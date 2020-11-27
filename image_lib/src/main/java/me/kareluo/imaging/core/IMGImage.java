@@ -11,7 +11,6 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.util.Log;
-import android.util.SparseArray;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -685,61 +684,18 @@ public class IMGImage {
         setRotateAndScale(rotate, scale, mClipFrame.centerX(), mClipFrame.centerY());
     }
 
-    private SparseArray<Float> rotateScales = new SparseArray<>();
-
     public void setRotateAndScale(float rotate, float scale, float focusX, float focusY) {
-
-
-        if (isVertical(rotate)) {
-            System.out.println("=== setRotateAndScale 偶数 === " + rotate + " %90= " + rotate % 90 + " scale " + scale);
-        } else if (isHorizontal(rotate)) {
-            System.out.println("=== setRotateAndScale 奇数 === " + rotate + " %90= " + rotate % 90 + " scale " + scale);
-        } else {
-        }
         mRotate = rotate;
         onScale(scale / getScale(), focusX, focusY);
     }
-
-    private boolean isVertical(float rotate) {
-        return isTargetValue(rotate, 1f);//90偶数倍
-    }
-
-    private boolean isHorizontal(float rotate) {
-        return isTargetValue(rotate, 0f);//90奇数倍
-    }
-
-    private boolean isTargetValue(float rotate, float judgeValue) {
-        rotate = Math.abs(rotate);
-        if (rotate % 90 == 0) {
-            // 是90的倍数
-            float times = rotate / 90;
-            // 判断是90的奇数倍还是偶数倍
-            System.out.println("=== setRotateAndScale  === times % 2 " + times % 2 + " judgeValue= " + judgeValue);
-            System.out.println("=== setRotateAndScale  === times % 2 == judgeValue " + (times % 2 == judgeValue));
-            return times % 2 == judgeValue;
-        }
-        return false;
-    }
-
 
     public void onScale(float factor, float focusX, float focusY) {
 
         if (factor == 1f) return;
 
-        if (Math.max(mClipFrame.width(), mClipFrame.height()) >= MAX_SIZE
-                || Math.min(mClipFrame.width(), mClipFrame.height()) <= MIN_SIZE) {
-            factor += (1 - factor) / 2;
-        }
-
         M.setScale(factor, factor, focusX, focusY);
         M.mapRect(mFrame);
         M.mapRect(mClipFrame);
-
-        // 修正clip 窗口
-        if (!mFrame.contains(mClipFrame)) {
-            // TODO
-//            mClipFrame.intersect(mFrame);
-        }
 
         for (IMGSticker sticker : mBackStickers) {
             M.mapRect(sticker.getFrame());

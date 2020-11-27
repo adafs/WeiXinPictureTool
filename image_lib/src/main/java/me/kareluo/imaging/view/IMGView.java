@@ -130,6 +130,9 @@ public class IMGView extends FrameLayout implements Runnable, ScaleGestureDetect
     }
 
     private void startHoming(IMGHoming sHoming, IMGHoming eHoming) {
+        if (DEBUG){
+            Log.d(TAG, "startHoming");
+        }
         if (mHomingAnimator == null) {
             mHomingAnimator = new IMGHomingAnimator();
             mHomingAnimator.addUpdateListener(this);
@@ -334,13 +337,22 @@ public class IMGView extends FrameLayout implements Runnable, ScaleGestureDetect
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            if (DEBUG){
+                Log.d(TAG, "MotionEvent.ACTION_DOWN");
+            }
             return onInterceptTouch(ev) || super.onInterceptTouchEvent(ev);
         }
         return super.onInterceptTouchEvent(ev);
     }
 
     boolean onInterceptTouch(MotionEvent event) {
-        return isHoming() || mImage.getMode() == IMGMode.CLIP;
+        if (isHoming()) {
+            stopHoming();
+            return true;
+        } else if (mImage.getMode() == IMGMode.CLIP) {
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -447,7 +459,7 @@ public class IMGView extends FrameLayout implements Runnable, ScaleGestureDetect
 
     boolean onSteady() {
         if (DEBUG) {
-            Log.d(TAG, "onSteady: isHoming=" + isHoming());
+            Log.d(TAG, "onSteady: ");
         }
         if (!isHoming()) {
             mImage.onSteady(getScrollX(), getScrollY());

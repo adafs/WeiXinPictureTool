@@ -43,6 +43,17 @@ public class IMGHoming {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        IMGHoming imgHoming = (IMGHoming) o;
+        return Float.compare(imgHoming.x, x) == 0 &&
+                Float.compare(imgHoming.y, y) == 0 &&
+                Float.compare(imgHoming.scale, scale) == 0 &&
+                Float.compare(imgHoming.rotate, rotate) == 0;
+    }
+
+    @Override
     public String toString() {
         return "IMGHoming{" +
                 "x=" + x +
